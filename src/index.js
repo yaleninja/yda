@@ -20,13 +20,27 @@ app.use(compression());
 // Body parsing
 app.use(express.json());
 
-// CORS (add any other frontend origins you use)
-const allowedOrigins = [
-  'https://eatyale.io',
-  // 'https://palegoldenrod-cassowary-131857.hostingersite.com',
-  // 'https://your-frontend-preview.onrender.com'
-];
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+// 🔐 CORS — allows ANY origin (including file:// / Origin: null)
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow non-browser / server-side calls (no Origin header)
+    // and file:// (Origin 'null')
+    if (!origin || origin === 'null') {
+      return callback(null, true);
+    }
+
+    // If you literally want to allow ANY web origin:
+    return callback(null, true);
+
+    // If later you want to restrict:
+    // const allowedOrigins = ['https://eatyale.io', 'https://some-other.site'];
+    // if (allowedOrigins.includes(origin)) {
+    //   return callback(null, true);
+    // }
+    // return callback(new Error('Not allowed by CORS: ' + origin));
+  },
+  credentials: true,
+}));
 
 // Routes
 app.use('/api', routes);
