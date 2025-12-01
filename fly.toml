@@ -1,0 +1,27 @@
+# fly.toml
+app = "yda"
+primary_region = "iad"  # or the region closest to your DB/users
+
+[build]
+# If you have a Dockerfile, use:
+# dockerfile = "./Dockerfile"
+# If not using a Dockerfile, Fly will use its Node builder automatically.
+
+[env]
+# Fly sets PORT=8080 for you; your code already uses process.env.PORT
+NODE_ENV = "production"
+
+[http_service]
+internal_port = 8080        # Express should listen on process.env.PORT (Fly provides 8080)
+force_https = true
+auto_stop_machines = "stop" # optional
+auto_start_machines = true
+min_machines_running = 1
+processes = ["app"]
+
+[[http_service.checks]]
+grace_period = "10s"
+interval = "15s"
+method = "GET"
+path = "/health"
+timeout = "2s"
