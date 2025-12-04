@@ -48,7 +48,7 @@ app.use('/api', routes);
 // Root
 app.get('/', (req, res) => {
   res.json({
-    message: 'YalDiningApp backend is running',
+    message: 'YalDiningApp backend is running v1153',
     status: 'online',
     database: 'connected',
     cronMode: process.env.CRON_MODE || 'disabled',
