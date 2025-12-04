@@ -2,7 +2,7 @@ require('dotenv').config(); // Load env first
 
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
+
 const compression = require('compression');
 
 const routes = require('./routes');
@@ -14,7 +14,28 @@ const PORT = process.env.PORT || 4000;
 
 // Security & perf
 app.set('trust proxy', 1);
-app.use(helmet());
+const helmet = require('helmet');
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "https://www.googletagmanager.com",
+          "https://www.google-analytics.com",
+          "'unsafe-inline'", // allows your inline <script> blocks
+        ],
+        connectSrc: [
+          "'self'",
+          "https://www.google-analytics.com",
+          "https://www.googletagmanager.com",
+        ],
+      },
+    },
+  })
+);
 app.use(compression());
 
 // Body parsing
@@ -66,8 +87,10 @@ app.get('/d43129d', (req, res) => {
   <!-- GA4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2GN1DX6608"></script>
   <script>
+    // Safe GA bootstrap
     window.dataLayer = window.dataLayer || [];
     function gtag(){ dataLayer.push(arguments); }
+
     gtag('js', new Date());
     gtag('config', 'G-2GN1DX6608');
   </script>
@@ -101,6 +124,8 @@ app.get('/d43129d', (req, res) => {
   <ul>
     <li>perfect-stork</li>
     <li>inquisitive-jaguar</li>
+    <li>witty-cheetah</li>
+    <li>cheerful-squid</li>
   </ul>
 
   <h2>Support Our Work</h2>
@@ -108,40 +133,48 @@ app.get('/d43129d', (req, res) => {
 
   <!-- A/B test logic -->
   <script>
-    // Randomly assign the user to Group A or Group B
-    let variant_name;
-    if (Math.random() < 0.5) {
-      variant_name = 'thanks'; // Group A
-    } else {
-      variant_name = 'kudos';  // Group B
-    }
+    (function () {
+      // Randomly assign the user to Group A or Group B
+      let variant_name = Math.random() < 0.5 ? 'thanks' : 'kudos';
 
-    // Messages for each variant
-    const messages = {
-      'thanks': 'Thank you!',
-      'kudos': 'Kudos!'
-    };
+      // Messages for each variant
+      const messages = {
+        thanks: 'Thank you!',
+        kudos: 'Kudos!'
+      };
 
-    // --- Exposure Tracking ---
-    // User was assigned and saw this variant
-    gtag('event', 'ab_test_exposure', {
-      test_name: 'button_copy_test',
-      variant: variant_name
-    });
+      // --- Exposure Tracking ---
+      // Wrap in try/catch so a GA error doesn't break the button
+      try {
+        gtag('event', 'ab_test_exposure', {
+          test_name: 'button_copy_test',
+          variant: variant_name
+        });
+      } catch (e) {
+        console.warn('GA exposure event failed:', e);
+      }
 
-    // --- Click Tracking (Goal) ---
-    document.getElementById('abtest').addEventListener('click', function () {
-      // Track using the variant name, not the button label
-      gtag('event', 'button_click_goal', {
-        button_type: variant_name,      // 'kudos' or 'thanks'
-        test_name: 'button_copy_test',
-        click_location: 'ab_test_endpoint'
+      const btn = document.getElementById('abtest');
+      if (!btn) return;
+
+      // --- Click Tracking (Goal) ---
+      btn.addEventListener('click', function () {
+        // Try sending event, but don't let errors stop the alert
+        try {
+          gtag('event', 'button_click_goal', {
+            button_type: variant_name,      // 'kudos' or 'thanks'
+            test_name: 'button_copy_test',
+            click_location: 'ab_test_endpoint'
+          });
+        } catch (e) {
+          console.warn('GA click event failed:', e);
+        }
+
+        const prompt_message = messages[variant_name] || 'Thank you!';
+        console.log('Variant:', variant_name);
+        alert(prompt_message);
       });
-
-      const prompt_message = messages[variant_name];
-      console.log('Variant:', variant_name);
-      alert(prompt_message);
-    });
+    })();
   </script>
 </body>
 </html>`);
