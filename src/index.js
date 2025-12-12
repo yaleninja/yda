@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 
 const compression = require('compression');
-
+const path = require('path');
 const routes = require('./routes');
 const db = require('./db/connection');
 const { setupCronJobs, setupTestCron } = require('./cron/jobs');
@@ -75,6 +75,10 @@ app.get('/', (req, res) => {
     cronMode: process.env.CRON_MODE || 'disabled',
     endpoints: { dining: '/api/dining', halls: '/api/dining/halls' }
   });
+});
+
+app.get('/test', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'test.html'));
 });
 
 app.get('/d43129d', (req, res) => {
